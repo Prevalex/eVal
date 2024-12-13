@@ -4,15 +4,16 @@ import re
 from math import pi, e, sin, cos, tan, acos, asin, atan, sqrt, factorial, exp, log, pow 
 
 vars_dict=dict()
+vars_dict['$'] = 0.0  # $ can be used as last result (result of last evaluation)
+
 
 def remove_white_spaces(s:str) -> str:
     return ''.join(re.split(r'\s',s))
-    #return str(s).replace(' ','')
 
 def substitute_variables(s:str) -> str:
 
     # Regex pattern to match alphanumeric and non-alphanumeric groups
-    pattern = r'\w+|[^\w]+'
+    pattern = r'\$+|\w+|[^\w^$]+'
 
     # Find all matches and put them to part_list - list of cmd_line parts, where parts are alphanumeric groups and
     # non-alphanumeric groups. For example: string  ‘q=123*(1+x)/y’ will be split to:
@@ -69,6 +70,7 @@ def evaluate_cmd(_cmd_str: str) -> str:
     _eval_str = substitute_variables(_cmd_str)
 
     _result = eval(_eval_str)
+    vars_dict['$'] = _result
 
     if _var_name:
         vars_dict[_var_name] = _result
@@ -108,14 +110,15 @@ if __name__ == "__main__":
         try_evaluate(cmd_str)
 
     else:
-        print(' * eval.py ver 0.1 *')
-        print(' = python math library imported')
-        print(' = following math names do not need to be prefixed with math.:\n = pi, e, sin, cos, tan, acos, asin, atan, sqrt, factorial, exp, log, pow')
-        print(' = math fuctions help is available at: https://docs.python.org/3/library/math.html')
+        print('>> eVal.py, Ver. 0.1')
+        print(' = Python math library imported. Use math. prefix for math lib names, except of:')
+        print(' = pi, e, sin, cos, tan, acos, asin, atan, sqrt, factorial, exp, log, pow')
+        print(' = math lib help is available at: https://docs.python.org/3/library/math.html')
+        print(' * Use v? command to list all variables. Use $ variables to refer to last result')
 
         while True:
             cmd_str=input('>> ').strip()
-            if cmd_str == '?':
+            if cmd_str == 'v?':
                 for itm in vars_dict:
                     print(f'   {itm} = {repr(vars_dict[itm])}')
             elif cmd_str:
