@@ -92,6 +92,14 @@ def evaluate_cmd(_cmd_str: str) -> str:
 
     return _out_str
 
+def try_result_int() -> int:
+    try:
+        _rc = int(vars_dict['$'])
+    except (ValueError, TypeError, ZeroDivisionError):
+        _rc = -1
+    return _rc
+
+
 def try_evaluate(cmd):
 
     cmd = remove_white_spaces(cmd)
@@ -108,6 +116,8 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         cmd_str = ' '.join(sys.argv[1:])
         try_evaluate(cmd_str)
+        print(f'-> {vars_dict['$']}')
+        sys.exit(try_result_int())
 
     else:
         print('>> eVal.py, Ver. 0.1')
@@ -124,8 +134,8 @@ if __name__ == "__main__":
             elif cmd_str:
                 try_evaluate(cmd_str)
             else:
-                print('<> Quit.')
-                sys.exit(0)
+                print(f'-> Quit')
+                sys.exit(try_result_int())
 
 
 
