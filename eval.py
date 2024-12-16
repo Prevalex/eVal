@@ -1,13 +1,11 @@
-#!
 import sys
+import re
 from math import *
 from numpy import *
-import re
-# from math import pi, e, sin, cos, tan, acos, asin, atan, sqrt, factorial, exp, log, pow
+import numpy as np
 
 vars_dict=dict()
 vars_dict['$'] = 0.0  # $ can be used as last result (result of last evaluation)
-
 
 def remove_white_spaces(s:str) -> str:
     return ''.join(re.split(r'\s',s))
@@ -27,7 +25,7 @@ def substitute_variables(s:str) -> str:
 
     for index in range(len(part_list)):
         if part_list[index] in vars_dict:
-            part_list[index] = str(vars_dict[part_list[index]])
+            part_list[index] = repr(vars_dict[part_list[index]])
 
     return ''.join(part_list)
 
@@ -70,14 +68,12 @@ def evaluate_cmd(_cmd_str: str) -> str:
             raise ValueError(_msg)
 
     _eval_str = substitute_variables(_cmd_str)
-
     _result = eval(_eval_str)
     vars_dict['$'] = _result
 
     if _var_name:
         vars_dict[_var_name] = _result
         _out_str += (_var_name + ' = ')
-        #print(f'1! _out_str =: {_out_str}')
 
     # compile _out_str for printing
     if _eval_str == _cmd_str:
@@ -88,7 +84,7 @@ def evaluate_cmd(_cmd_str: str) -> str:
 
     else:
         if _cmd_str in vars_dict:
-            _out_str += (_cmd_str + ' = ' + repr(_result))
+            _out_str += (_cmd_str + ' = ' + repr(_result))  # str for numpy
         else:
             _out_str += (_cmd_str+' = ' + _eval_str + ' = ' + repr(_result))
 
@@ -105,7 +101,6 @@ def try_result_int() -> int:
 def try_evaluate(cmd):
 
     cmd = remove_white_spaces(cmd)
-
     try:
         out_str = evaluate_cmd(cmd)
     except Exception as err:
@@ -119,6 +114,7 @@ if __name__ == "__main__":
         cmd_str = ' '.join(sys.argv[1:])
         try_evaluate(cmd_str)
         print('=')
+        #print(f'{eval(repr(vars_dict['$']))}')
         print(f'{vars_dict['$']}')
         sys.exit(try_result_int())
 
@@ -126,13 +122,15 @@ if __name__ == "__main__":
         print('>> eVal.py, Ver. 0.1')
         print(' = from math import *, from numpy import *')
         print(' = math lib help is available at: https://docs.python.org/3/library/math.html')
-        print(' * Use v? command to list all variables. Use $ variable to refer to last result')
+        print(' * Use ?v command to list all variables. Use $ variable to refer to last result')
 
         while True:
             cmd_str=input('>> ').strip()
-            if cmd_str == 'v?':
+            if cmd_str == '?v':
                 for itm in vars_dict:
                     print(f'   {itm} = {repr(vars_dict[itm])}')
+            elif cmd_str == '?':
+                print(vars_dict['$'])
             elif cmd_str:
                 try_evaluate(cmd_str)
             else:
