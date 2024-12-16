@@ -1,7 +1,8 @@
 import sys
-import math
+from math import *
+from numpy import *
 import re
-from math import pi, e, sin, cos, tan, acos, asin, atan, sqrt, factorial, exp, log, pow 
+# from math import pi, e, sin, cos, tan, acos, asin, atan, sqrt, factorial, exp, log, pow
 
 vars_dict=dict()
 vars_dict['$'] = 0.0  # $ can be used as last result (result of last evaluation)
@@ -116,15 +117,15 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         cmd_str = ' '.join(sys.argv[1:])
         try_evaluate(cmd_str)
-        print(f'-> {vars_dict['$']}')
+        print('=')
+        print(f'{vars_dict['$']}')
         sys.exit(try_result_int())
 
     else:
         print('>> eVal.py, Ver. 0.1')
-        print(' = Python math library imported. Use math. prefix for math lib names, except of:')
-        print(' = pi, e, sin, cos, tan, acos, asin, atan, sqrt, factorial, exp, log, pow')
+        print(' = from math import *, from numpy import *')
         print(' = math lib help is available at: https://docs.python.org/3/library/math.html')
-        print(' * Use v? command to list all variables. Use $ variables to refer to last result')
+        print(' * Use v? command to list all variables. Use $ variable to refer to last result')
 
         while True:
             cmd_str=input('>> ').strip()
@@ -136,6 +137,3 @@ if __name__ == "__main__":
             else:
                 print(f'-> Quit')
                 sys.exit(try_result_int())
-
-
-
