@@ -129,8 +129,12 @@ if __name__ == "__main__":
             if cmd_str == '?v':
                 for itm in vars_dict:
                     print(f'   {itm} = {repr(vars_dict[itm])}')
-            elif cmd_str == '?':
+            elif cmd_str == '?' or cmd_str == '?$':
                 print(vars_dict['$'])
+            elif len(cmd_str)> 1:
+                if cmd_str[0] == '?':
+                    if cmd_str[1:] in vars_dict:
+                        print(vars_dict[cmd_str[1:]])
             elif cmd_str:
                 try_evaluate(cmd_str)
             else:
