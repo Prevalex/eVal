@@ -1,11 +1,16 @@
+from alx import dbg
 import sys
 import re
 from math import *
 from numpy import *
+from pprint import pprint
 import numpy as np
 
 vars_dict=dict()
-vars_dict['$'] = 0.0  # $ can be used as last result (result of last evaluation)
+v_val = 0 # index of variable value in variable tuple in vars_dict
+v_rep = 1 # index of variable value in variable repr  in vars_dict
+vars_dict['$'] = (0.0, repr(0.0))  # $ can be used as last result (result of last evaluation)
+
 
 def remove_white_spaces(s:str) -> str:
     return ''.join(re.split(r'\s',s))
@@ -25,7 +30,7 @@ def substitute_variables(s:str) -> str:
 
     for index in range(len(part_list)):
         if part_list[index] in vars_dict:
-            part_list[index] = repr(vars_dict[part_list[index]])
+            part_list[index] = vars_dict[part_list[index]][v_rep]
 
     return ''.join(part_list)
 
@@ -48,6 +53,12 @@ def verify_var_name(varname:str) -> [bool, str]:
 
     return _Ok, _msg
 
+def outs(_var:str):
+    if vars_dict[_var][v_rep] == str(vars_dict[_var][v_val]):
+        return vars_dict[_var][v_rep]
+    else:
+        return type(vars_dict[_var][v_val]).__name__ + '(\n' + str(vars_dict[_var][v_val]) + '\n)'
+
 def parse_assignment(s:str):
     pos=s.find('=')
     if pos >= 0:
@@ -55,9 +66,9 @@ def parse_assignment(s:str):
     else:
         return '', s
         
-
 def evaluate_cmd(_cmd_str: str) -> str:
     _out_str = ''
+
     _var_name, _cmd_str = parse_assignment(_cmd_str)
 
     if _var_name:
@@ -69,34 +80,32 @@ def evaluate_cmd(_cmd_str: str) -> str:
 
     _eval_str = substitute_variables(_cmd_str)
     _result = eval(_eval_str)
-    vars_dict['$'] = _result
+    vars_dict['$'] = (_result, repr(_result))
 
     if _var_name:
-        vars_dict[_var_name] = _result
+        vars_dict[_var_name] = (_result, repr(_result))
         _out_str += (_var_name + ' = ')
 
     # compile _out_str for printing
     if _eval_str == _cmd_str:
         if _var_name:
-            _out_str += (repr(_result))
+            _out_str += outs(_var_name)
         else:
-            _out_str += (_cmd_str + ' = ' + repr(_result))
-
+            _out_str += (_cmd_str + ' = ' + outs('$'))
     else:
         if _cmd_str in vars_dict:
-            _out_str += (_cmd_str + ' = ' + repr(_result))  # str for numpy
+            _out_str += (_cmd_str + ' = ' + outs(_cmd_str))
         else:
-            _out_str += (_cmd_str+' = ' + _eval_str + ' = ' + repr(_result))
+            _out_str += (_cmd_str + ' = ' + _eval_str + ' = ' + outs('$'))
 
     return _out_str
 
 def try_result_int() -> int:
     try:
-        _rc = int(vars_dict['$'])
+        _rc = int(vars_dict['$'][v_val])
     except (ValueError, TypeError, ZeroDivisionError):
         _rc = -1
     return _rc
-
 
 def try_evaluate(cmd):
 
@@ -113,9 +122,6 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         cmd_str = ' '.join(sys.argv[1:])
         try_evaluate(cmd_str)
-        print('=')
-        #print(f'{eval(repr(vars_dict['$']))}')
-        print(f'{vars_dict['$']}')
         sys.exit(try_result_int())
 
     else:
@@ -126,15 +132,11 @@ if __name__ == "__main__":
 
         while True:
             cmd_str=input('>> ').strip()
-            if cmd_str == '?v':
+            if cmd_str == '?*':
+                pprint(vars_dict, sort_dicts=False, width=180)
+            elif cmd_str == '?v':
                 for itm in vars_dict:
                     print(f'   {itm} = {repr(vars_dict[itm])}')
-            elif cmd_str == '?' or cmd_str == '?$':
-                print(vars_dict['$'])
-            elif len(cmd_str)> 1:
-                if cmd_str[0] == '?':
-                    if cmd_str[1:] in vars_dict:
-                        print(vars_dict[cmd_str[1:]])
             elif cmd_str:
                 try_evaluate(cmd_str)
             else:
