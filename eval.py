@@ -1,4 +1,6 @@
-from alx import dbg
+import os
+
+from alx import dbg, save_text_to_file
 import sys
 import re
 from math import *
@@ -11,6 +13,11 @@ v_val = 0 # index of variable value in variable tuple in vars_dict
 v_rep = 1 # index of variable value in variable repr  in vars_dict
 vars_dict['$'] = (0.0, repr(0.0))  # $ can be used as last result (result of last evaluation)
 
+temp_folder = os.environ['TEMP']
+eval_file='$.eval'
+repr_file='$.repr'
+cmd_file_eval = os.path.join(temp_folder,eval_file+'.cmd')
+cmd_file_repr = os.path.join(temp_folder,repr_file+'.cmd')
 
 def remove_white_spaces(s:str) -> str:
     return ''.join(re.split(r'\s',s))
@@ -133,12 +140,28 @@ if __name__ == "__main__":
         while True:
             cmd_str=input('>> ').strip()
             if cmd_str == '?*':
-                pprint(vars_dict, sort_dicts=False, width=180)
+                print('\n  {')
+                vars_dict_list = []
+                for itm in vars_dict:
+                    vars_dict_list.append(f'   {itm}: {vars_dict[itm]}')
+                print(',\n'.join(vars_dict_list))
+                print('   }')
             elif cmd_str == '?v':
                 for itm in vars_dict:
-                    print(f'   {itm} = {repr(vars_dict[itm])}')
+                    print(f'   {itm} = {outs(itm)}')
             elif cmd_str:
                 try_evaluate(cmd_str)
             else:
                 print(f'-> Quit')
+
+                Ok, msg = save_text_to_file(f'@set {eval_file}={str(vars_dict['$'][v_val])}'.
+                                            replace('\n',' ')+'\n', cmd_file_eval)
+                if not Ok:
+                    print(msg)
+
+                Ok, msg = save_text_to_file(f'@set {repr_file}={str(vars_dict['$'][v_rep])}'.
+                                            replace('\n',' ')+'\n', cmd_file_repr)
+                if not Ok:
+                    print(msg)
+
                 sys.exit(try_result_int())
