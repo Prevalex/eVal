@@ -1,6 +1,6 @@
 import os
 
-from alx import dbg, save_text_to_file
+from alx import dbg, save_text_to_file, save_pydata_to_json_file, read_pydata_from_json_file, is_file_exists
 import sys
 import re
 from math import *
@@ -11,13 +11,31 @@ import numpy as np
 vars_dict=dict()
 v_val = 0 # index of variable value in variable tuple in vars_dict
 v_rep = 1 # index of variable value in variable repr  in vars_dict
-vars_dict['$'] = (0.0, repr(0.0))  # $ can be used as last result (result of last evaluation)
 
 temp_folder = os.environ['TEMP']
-eval_file='$.eval'
-repr_file='$.repr'
-cmd_file_eval = os.path.join(temp_folder,eval_file+'.cmd')
-cmd_file_repr = os.path.join(temp_folder,repr_file+'.cmd')
+eval_file = '$eval.value'
+repr_file = '$eval.repr'
+json_file =  '$eval.vars'
+
+cmd_file_eval = os.path.join(temp_folder, eval_file+'.cmd')
+cmd_file_repr = os.path.join(temp_folder, repr_file+'.cmd')
+var_file_json = os.path.join(temp_folder, json_file+'.json')
+
+def init_vars_dict():
+    global vars_dict
+    vars_dict = {'$': (0.0, repr(0.0))}
+
+def repr_vars_dict(var_dict):
+    _repr_dict = dict()
+    for key, value in var_dict.items():
+        _repr_dict[key] = value[v_rep]
+    return _repr_dict
+
+def load_repr_dict(repr_dict):
+    _vars_dict = dict()
+    for key, value in repr_dict.items():
+        _vars_dict[key] = (eval(value), value)
+    return _vars_dict
 
 def remove_white_spaces(s:str) -> str:
     return ''.join(re.split(r'\s',s))
@@ -126,11 +144,22 @@ def try_evaluate(cmd):
 
 if __name__ == "__main__":
 
+    if is_file_exists(var_file_json):
+        Ok, repr_dict = read_pydata_from_json_file(var_file_json)
+        if not Ok:
+
+            print(f'\n(!) Eval.py: Error occurred while reading {var_file_json}:')
+            print(f'{vars_dict}\n')
+
+            init_vars_dict()
+        else:
+            vars_dict = load_repr_dict(repr_dict)
+    else:
+        init_vars_dict()
+
     if len(sys.argv) > 1:
         cmd_str = ' '.join(sys.argv[1:])
         try_evaluate(cmd_str)
-        sys.exit(try_result_int())
-
     else:
         print('>> eVal.py, Ver. 0.1')
         print(' = from math import *, from numpy import *')
@@ -149,19 +178,29 @@ if __name__ == "__main__":
             elif cmd_str == '?v':
                 for itm in vars_dict:
                     print(f'   {itm} = {outs(itm)}')
+            elif cmd_str == '-v':
+                init_vars_dict()
             elif cmd_str:
                 try_evaluate(cmd_str)
             else:
                 print(f'-> Quit')
+                break
 
-                Ok, msg = save_text_to_file(f'@set {eval_file}={str(vars_dict['$'][v_val])}'.
-                                            replace('\n',' ')+'\n', cmd_file_eval)
-                if not Ok:
-                    print(msg)
+    Ok, msg = save_text_to_file(f'@set {eval_file}={str(vars_dict['$'][v_val])}'.
+                                replace('\n',' ')+'\n', cmd_file_eval)
+    if not Ok:
+        print(f'\n(!) Eval.py: Error occurred while saving {cmd_file_eval}:')
+        print(msg)
 
-                Ok, msg = save_text_to_file(f'@set {repr_file}={str(vars_dict['$'][v_rep])}'.
-                                            replace('\n',' ')+'\n', cmd_file_repr)
-                if not Ok:
-                    print(msg)
+    Ok, msg = save_text_to_file(f'@set {repr_file}={str(vars_dict['$'][v_rep])}'.
+                                replace('\n',' ')+'\n', cmd_file_repr)
+    if not Ok:
+        print(f'\n(!) Eval.py: Error occurred while saving {cmd_file_repr}:')
+        print(msg)
 
-                sys.exit(try_result_int())
+    Ok, msg = save_pydata_to_json_file(repr_vars_dict(vars_dict), var_file_json)
+    if not Ok:
+        print(f'\n(!) Eval.py: Error occurred while saving {var_file_json}:')
+        print(msg)
+
+    sys.exit(try_result_int())
