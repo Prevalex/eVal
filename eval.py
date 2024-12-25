@@ -142,6 +142,30 @@ def try_evaluate(cmd):
 
     print(f'   {out_str}')
 
+def create_cmd_set(var_dict, index, prefix):
+    cmd_set = list()
+    for key, value in var_dict.items():
+        cmd_set.append(f'@set {prefix}.{key}={value[index]}'.replace('\n', ' '))
+    return '\n'.join(cmd_set) + '\n'
+
+def cmdline_parsed(cmd_str):
+    parsed_flag = True
+    if cmd_str == '?*':
+        print('\n  {')
+        vars_dict_list = []
+        for itm in vars_dict:
+            vars_dict_list.append(f'   {itm}: {vars_dict[itm]}')
+        print(',\n'.join(vars_dict_list))
+        print('   }')
+    elif cmd_str == '?v':
+        for itm in vars_dict:
+            print(f'   {itm} = {outs(itm)}')
+    elif cmd_str == '-v':
+        init_vars_dict()
+    else:
+        parsed_flag = False
+    return parsed_flag
+
 if __name__ == "__main__":
 
     if is_file_exists(var_file_json):
@@ -158,8 +182,9 @@ if __name__ == "__main__":
         init_vars_dict()
 
     if len(sys.argv) > 1:
-        cmd_str = ' '.join(sys.argv[1:])
-        try_evaluate(cmd_str)
+        cmdline = ' '.join(sys.argv[1:])
+        if not cmdline_parsed(cmdline):
+            try_evaluate(cmdline)
     else:
         print('>> eVal.py, Ver. 0.1')
         print(' = from math import *, from numpy import *')
@@ -167,33 +192,21 @@ if __name__ == "__main__":
         print(' * Use ?v command to list all variables. Use $ variable to refer to last result')
 
         while True:
-            cmd_str=input('>> ').strip()
-            if cmd_str == '?*':
-                print('\n  {')
-                vars_dict_list = []
-                for itm in vars_dict:
-                    vars_dict_list.append(f'   {itm}: {vars_dict[itm]}')
-                print(',\n'.join(vars_dict_list))
-                print('   }')
-            elif cmd_str == '?v':
-                for itm in vars_dict:
-                    print(f'   {itm} = {outs(itm)}')
-            elif cmd_str == '-v':
-                init_vars_dict()
-            elif cmd_str:
-                try_evaluate(cmd_str)
+            cmdline=input('>> ').strip()
+            if cmdline_parsed(cmdline):
+                pass
+            elif cmdline:
+                try_evaluate(cmdline)
             else:
                 print(f'-> Quit')
                 break
 
-    Ok, msg = save_text_to_file(f'@set {eval_file}={str(vars_dict['$'][v_val])}'.
-                                replace('\n',' ')+'\n', cmd_file_eval)
+    Ok, msg = save_text_to_file(create_cmd_set(vars_dict,v_val, eval_file ), cmd_file_eval)
     if not Ok:
         print(f'\n(!) Eval.py: Error occurred while saving {cmd_file_eval}:')
         print(msg)
 
-    Ok, msg = save_text_to_file(f'@set {repr_file}={str(vars_dict['$'][v_rep])}'.
-                                replace('\n',' ')+'\n', cmd_file_repr)
+    Ok, msg = save_text_to_file(create_cmd_set(vars_dict,v_rep, repr_file), cmd_file_repr)
     if not Ok:
         print(f'\n(!) Eval.py: Error occurred while saving {cmd_file_repr}:')
         print(msg)
