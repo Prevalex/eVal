@@ -34,7 +34,13 @@ def repr_vars_dict(var_dict):
 def load_repr_dict(repr_dict):
     _vars_dict = dict()
     for key, value in repr_dict.items():
-        _vars_dict[key] = (eval(value), value)
+        try:
+            _vars_dict[key] = (eval(value), value)
+        except Exception as err:
+            _vars_dict[key] = (None, repr(None))
+            print(f'\n! Eval.py: Error occurred while reading {var_file_json}:')
+            print(f': {err}\n')
+    _vars_dict['$'] = (None, repr(None))
     return _vars_dict
 
 def remove_white_spaces(s:str) -> str:
@@ -172,8 +178,8 @@ if __name__ == "__main__":
         Ok, repr_dict = read_pydata_from_json_file(var_file_json)
         if not Ok:
 
-            print(f'\n(!) Eval.py: Error occurred while reading {var_file_json}:')
-            print(f'{vars_dict}\n')
+            print(f'\n! Eval.py: Error occurred while reading {var_file_json}:')
+            print(f': {vars_dict}\n')
 
             init_vars_dict()
         else:
@@ -198,22 +204,22 @@ if __name__ == "__main__":
             elif cmdline:
                 try_evaluate(cmdline)
             else:
-                print(f'-> Quit')
+                #print(f'-> Quit')
                 break
 
     Ok, msg = save_text_to_file(create_cmd_set(vars_dict,v_val, eval_file ), cmd_file_eval)
     if not Ok:
-        print(f'\n(!) Eval.py: Error occurred while saving {cmd_file_eval}:')
-        print(msg)
+        print(f'\n! Eval.py: Error occurred while saving {cmd_file_eval}:')
+        print(f': {msg}')
 
     Ok, msg = save_text_to_file(create_cmd_set(vars_dict,v_rep, repr_file), cmd_file_repr)
     if not Ok:
-        print(f'\n(!) Eval.py: Error occurred while saving {cmd_file_repr}:')
-        print(msg)
+        print(f'\n! Eval.py: Error occurred while saving {cmd_file_repr}:')
+        print(f': {msg}')
 
     Ok, msg = save_pydata_to_json_file(repr_vars_dict(vars_dict), var_file_json)
     if not Ok:
-        print(f'\n(!) Eval.py: Error occurred while saving {var_file_json}:')
-        print(msg)
+        print(f'\n! Eval.py: Error occurred while saving {var_file_json}:')
+        print(f': {msg}')
 
     sys.exit(try_result_int())
