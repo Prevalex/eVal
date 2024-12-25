@@ -1,12 +1,11 @@
 import os
-
 from alx import dbg, save_text_to_file, save_pydata_to_json_file, read_pydata_from_json_file, is_file_exists
 import sys
 import re
 from math import *
 from numpy import *
-from pprint import pprint
 import numpy as np
+from fractions import Fraction
 
 vars_dict=dict()
 v_val = 0 # index of variable value in variable tuple in vars_dict
@@ -86,6 +85,8 @@ def verify_var_name(varname:str) -> [bool, str]:
 
 def outs(_var:str):
     if vars_dict[_var][v_rep] == str(vars_dict[_var][v_val]):
+        return vars_dict[_var][v_rep]
+    elif type(vars_dict[_var][v_val]).__name__ == 'str':
         return vars_dict[_var][v_rep]
     else:
         return type(vars_dict[_var][v_val]).__name__ + '(\n' + str(vars_dict[_var][v_val]) + '\n)'
