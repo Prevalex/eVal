@@ -29,7 +29,7 @@ def init_vars_dict():
     global vars_dict
     vars_dict = {'$': (None, repr(None))}
 
-def save_repr_dict(vars_dic):
+def make_repr_dict(vars_dic):
     """
     Converts a dictionary of variables containing values and reprs into a dictionary of reprs only for subsequent
      saving to a .json file, i.e: {var_name: (var_value, repr(var_value))} -> {var_name: repr(var_value)}
@@ -91,10 +91,11 @@ def verify_var_name(varname:str) -> [bool, str]:
     _Ok, _msg = True, ''
 
     check_list = re.findall(r'\W+', varname)
+    dbg(f'{check_list=}')
 
     if check_list:
         _Ok = False
-        _msg = 'Error: Symbol(s) ' + ','.join(check_list) + ' are not allowed in variable name.'
+        _msg = 'Error: Symbol(s) \"' + '\", \"'.join(check_list) + f'\" are not allowed in variable name: \"{varname}\".'
         return _Ok, _msg
 
     check_list = re.findall(r'[a-zA-Z_]', varname[0])
@@ -241,7 +242,7 @@ if __name__ == "__main__":
         print(f'\n! Eval.py: Error occurred while saving {cmd_file_repr}:')
         print(f': {msg}')
 
-    Ok, msg = save_pydata_to_json_file(save_repr_dict(vars_dict), var_file_json)
+    Ok, msg = save_pydata_to_json_file(make_repr_dict(vars_dict), var_file_json)
     if not Ok:
         print(f'\n! Eval.py: Error occurred while saving {var_file_json}:')
         print(f': {msg}')
