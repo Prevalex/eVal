@@ -157,10 +157,14 @@ def evaluate_cmd(_cmd_str: str) -> str:
     return _out_str
 
 def try_result_int() -> int:
-    try:
+    try:  # Try direct convert to int
         _rc = int(vars_dict['$'][v_val])
     except (ValueError, TypeError, ZeroDivisionError):
-        _rc = -1
+        try: # Try convert to bool and then to int
+            _rc = bool(vars_dict['$'][v_val])
+            _rc = int(_rc)
+        except (ValueError, TypeError, ZeroDivisionError):
+            _rc = -1
     return _rc
 
 def try_evaluate(cmd):
