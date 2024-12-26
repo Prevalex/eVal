@@ -7,7 +7,8 @@ from numpy import *
 import numpy as np
 from fractions import Fraction
 
-vars_dict=dict()
+vars_dict:dict = dict()
+
 v_val = 0 # index of variable value in variable tuple in vars_dict
 v_rep = 1 # index of variable value in variable repr  in vars_dict
 
@@ -21,18 +22,35 @@ cmd_file_repr = os.path.join(temp_folder, repr_file+'.cmd')
 var_file_json = os.path.join(temp_folder, json_file+'.json')
 
 def init_vars_dict():
+    """
+    Initializes a dictionary of variables
+    :return:
+    """
     global vars_dict
-    vars_dict = {'$': (0.0, repr(0.0))}
+    vars_dict = {'$': (None, repr(None))}
 
-def repr_vars_dict(var_dict):
+def save_repr_dict(vars_dic):
+    """
+    Converts a dictionary of variables containing values and reprs into a dictionary of reprs only for subsequent
+     saving to a .json file, i.e: {var_name: (var_value, repr(var_value))} -> {var_name: repr(var_value)}
+    :param vars_dic: dictionary of variables containing their values and reprs
+    :return: dictionary of variables containing their reprs only
+    """
     _repr_dict = dict()
-    for key, value in var_dict.items():
+    for key, value in vars_dic.items():
         _repr_dict[key] = value[v_rep]
     return _repr_dict
 
-def load_repr_dict(repr_dict):
+def load_repr_dict(repr_dic):
+    """
+    Converts a dictionary of variables containing reprs only into a dictionary of values and reprs for subsequent
+     use as variable deposit. I.e.: {var_name: repr(var_value)} -> {var_name: (var_value, repr(var_value))}.
+     * Uses eval() to convert repr(var_value) to var_value
+    :param repr_dic:
+    :return: dictionary of variables containing their reprs only - like {var_name: (var_value, repr(var_value))}
+    """
     _vars_dict = dict()
-    for key, value in repr_dict.items():
+    for key, value in repr_dic.items():
         try:
             _vars_dict[key] = (eval(value), value)
         except Exception as err:
@@ -43,6 +61,11 @@ def load_repr_dict(repr_dict):
     return _vars_dict
 
 def remove_white_spaces(s:str) -> str:
+    """
+    Removes all white characters from a string
+    :param s: input string, which may contain white characters
+    :return: output string, where all white characters are removed
+    """
     return ''.join(re.split(r'\s',s))
 
 def substitute_variables(s:str) -> str:
@@ -218,7 +241,7 @@ if __name__ == "__main__":
         print(f'\n! Eval.py: Error occurred while saving {cmd_file_repr}:')
         print(f': {msg}')
 
-    Ok, msg = save_pydata_to_json_file(repr_vars_dict(vars_dict), var_file_json)
+    Ok, msg = save_pydata_to_json_file(save_repr_dict(vars_dict), var_file_json)
     if not Ok:
         print(f'\n! Eval.py: Error occurred while saving {var_file_json}:')
         print(f': {msg}')
