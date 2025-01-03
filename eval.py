@@ -91,7 +91,6 @@ def verify_var_name(varname:str) -> [bool, str]:
     _Ok, _msg = True, ''
 
     check_list = re.findall(r'\W+', varname)
-    dbg(f'{check_list=}')
 
     if check_list:
         _Ok = False
@@ -156,15 +155,11 @@ def evaluate_cmd(_cmd_str: str) -> str:
 
     return _out_str
 
-def try_result_int() -> int:
+def try_result_as_int() -> int:
     try:  # Try direct convert to int
         _rc = int(vars_dict['$'][v_val])
     except (ValueError, TypeError, ZeroDivisionError):
-        try: # Try convert to bool and then to int
-            _rc = bool(vars_dict['$'][v_val])
-            _rc = int(_rc)
-        except (ValueError, TypeError, ZeroDivisionError):
-            _rc = -1
+        _rc = -1
     return _rc
 
 def try_evaluate(cmd):
@@ -251,4 +246,4 @@ if __name__ == "__main__":
         print(f'\n! Eval.py: Error occurred while saving {var_file_json}:')
         print(f': {msg}')
 
-    sys.exit(try_result_int())
+    sys.exit(try_result_as_int())
