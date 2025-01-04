@@ -6,6 +6,8 @@ from math import *
 from numpy import *
 import numpy as np
 from fractions import Fraction
+from colorama import Fore, Back, Style, init
+init()
 
 vars_dict:dict = dict()
 
@@ -101,7 +103,8 @@ def verify_var_name(varname:str) -> [bool, str]:
 
     if not check_list:
         _Ok = False
-        _msg = 'Error: Symbol ' + f'{varname[0]}' + ' is not allowed as a first symbol of variable name.'
+        _msg = (Fore.RED + 'Error: Symbol ' + f'{varname[0]}' + ' is not allowed as a first symbol of variable name.' +
+                Fore.RESET)
         return _Ok, _msg
 
     return _Ok, _msg
@@ -112,7 +115,8 @@ def outs(_var:str):
     elif type(vars_dict[_var][v_val]).__name__ == 'str':
         return vars_dict[_var][v_rep]
     else:
-        return type(vars_dict[_var][v_val]).__name__ + '(\n' + str(vars_dict[_var][v_val]) + '\n)'
+        return (type(vars_dict[_var][v_val]).__name__ + '(\n' + Style.BRIGHT + str(vars_dict[_var][v_val]) +
+                Style.RESET_ALL + '\n)')
 
 def parse_assignment(s:str):
     pos=s.find('=')
@@ -168,7 +172,7 @@ def try_evaluate(cmd):
     try:
         out_str = evaluate_cmd(cmd)
     except Exception as err:
-        out_str = str(err)
+        out_str = Fore.RED + str(err) + Fore.RESET
 
     print(f'   {out_str}')
 
@@ -178,7 +182,7 @@ def create_cmd_set(var_dict, index, prefix):
         cmd_set.append(f'@set {prefix}.{key}={value[index]}'.replace('\n', ' '))
     return '\n'.join(cmd_set) + '\n'
 
-def cmdline_parsed(cmd_str):
+def cmd_keywords_found(cmd_str):
     parsed_flag = True
     if cmd_str == '?*':
         print('\n  {')
@@ -202,8 +206,10 @@ if __name__ == "__main__":
         Ok, repr_dict = read_pydata_from_json_file(var_file_json)
         if not Ok:
 
+            print(Fore.RED)
             print(f'\n! Eval.py: Error occurred while reading {var_file_json}:')
             print(f': {vars_dict}\n')
+            print(Fore.RESET)
 
             init_vars_dict()
         else:
@@ -213,7 +219,7 @@ if __name__ == "__main__":
 
     if len(sys.argv) > 1:
         cmdline = ' '.join(sys.argv[1:])
-        if not cmdline_parsed(cmdline):
+        if not cmd_keywords_found(cmdline):
             try_evaluate(cmdline)
     else:
         print('>> eVal.py, Ver. 0.1')
@@ -223,7 +229,7 @@ if __name__ == "__main__":
 
         while True:
             cmdline=input('>> ').strip()
-            if cmdline_parsed(cmdline):
+            if cmd_keywords_found(cmdline):
                 pass
             elif cmdline:
                 try_evaluate(cmdline)
@@ -233,17 +239,23 @@ if __name__ == "__main__":
 
     Ok, msg = save_text_to_file(create_cmd_set(vars_dict,v_val, eval_file ), cmd_file_eval)
     if not Ok:
+        print(Fore.RED)
         print(f'\n! Eval.py: Error occurred while saving {cmd_file_eval}:')
         print(f': {msg}')
+        print(Fore.RESET)
 
     Ok, msg = save_text_to_file(create_cmd_set(vars_dict,v_rep, repr_file), cmd_file_repr)
     if not Ok:
+        print(Fore.RED)
         print(f'\n! Eval.py: Error occurred while saving {cmd_file_repr}:')
         print(f': {msg}')
+        print(Fore.RESET)
 
     Ok, msg = save_pydata_to_json_file(make_repr_dict(vars_dict), var_file_json)
     if not Ok:
+        print(Fore.RED)
         print(f'\n! Eval.py: Error occurred while saving {var_file_json}:')
         print(f': {msg}')
+        print(Fore.RESET)
 
     sys.exit(try_result_as_int())
