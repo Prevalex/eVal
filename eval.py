@@ -111,11 +111,11 @@ def verify_var_name(varname:str) -> [bool, str]:
 
 def outs(_var:str):
     if vars_dict[_var][v_rep] == str(vars_dict[_var][v_val]):
-        return vars_dict[_var][v_rep]
+        return Style.BRIGHT + Fore.CYAN + vars_dict[_var][v_rep] + Style.RESET_ALL
     elif type(vars_dict[_var][v_val]).__name__ == 'str':
-        return vars_dict[_var][v_rep]
+        return Style.BRIGHT + Fore.CYAN + vars_dict[_var][v_rep] + Style.RESET_ALL
     else:
-        return (type(vars_dict[_var][v_val]).__name__ + '(\n' + Style.BRIGHT + str(vars_dict[_var][v_val]) +
+        return (type(vars_dict[_var][v_val]).__name__ + '(\n' + Style.BRIGHT + Fore.CYAN + str(vars_dict[_var][v_val]) +
                 Style.RESET_ALL + '\n)')
 
 def parse_assignment(s:str):
