@@ -1,16 +1,20 @@
 import os
 from alx import dbg, save_text_to_file, save_pydata_to_json_file, read_pydata_from_json_file, is_file_exists
 import sys
+#import sympy
 import re
 from math import *
 from numpy import *
 import numpy as np
 from fractions import Fraction
 
-#from colorama import Fore, Back, Style, init
-from colorama import Fore, Back, Style, just_fix_windows_console
-#init()
-just_fix_windows_console()
+from colorama import Fore, Back, Style
+from colorama import init as colorama_init
+from colorama import deinit as colorama_deinit
+
+#from colorama import Fore, Back, Style, just_fix_windows_console
+colorama_init()
+#just_fix_windows_console()
 
 """ #https://pypi.org/project/colorama/
 colorama_dic = {'Fore': ['BLACK', 'RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', 'CYAN', 'WHITE', 'RESET',
@@ -274,5 +278,7 @@ if __name__ == "__main__":
         print(f'\n! Eval.py: Error occurred while saving {var_file_json}:')
         print(f': {msg}')
         print(Fore.RESET)
+
+    colorama_deinit()
 
     sys.exit(try_result_as_int())
