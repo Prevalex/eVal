@@ -12,7 +12,7 @@ from colorama import Fore, Back, Style, just_fix_windows_console
 #init()
 just_fix_windows_console()
 
-#https://pypi.org/project/colorama/
+""" #https://pypi.org/project/colorama/
 colorama_dic = {'Fore': ['BLACK', 'RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', 'CYAN', 'WHITE', 'RESET',
                          #These are fairly well supported, but not part of the standard:
                          'LIGHTBLACK_EX', 'LIGHTRED_EX', 'LIGHTGREEN_EX', 'LIGHTYELLOW_EX', 'LIGHTBLUE_EX',
@@ -25,7 +25,7 @@ colorama_dic = {'Fore': ['BLACK', 'RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', '
 
                 'Style': ['DIM', 'NORMAL', 'BRIGHT', 'RESET_ALL']
                 }
-
+"""
 vars_dict:dict = dict()
 
 v_val = 0 # index of variable value in variable tuple in vars_dict
