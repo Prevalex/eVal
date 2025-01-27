@@ -6,8 +6,25 @@ from math import *
 from numpy import *
 import numpy as np
 from fractions import Fraction
-from colorama import Fore, Back, Style, init
-init()
+
+#from colorama import Fore, Back, Style, init
+from colorama import Fore, Back, Style, just_fix_windows_console
+#init()
+just_fix_windows_console()
+
+#https://pypi.org/project/colorama/
+colorama_dic = {'Fore': ['BLACK', 'RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', 'CYAN', 'WHITE', 'RESET',
+                         #These are fairly well supported, but not part of the standard:
+                         'LIGHTBLACK_EX', 'LIGHTRED_EX', 'LIGHTGREEN_EX', 'LIGHTYELLOW_EX', 'LIGHTBLUE_EX',
+                         'LIGHTMAGENTA_EX', 'LIGHTCYAN_EX', 'LIGHTWHITE_EX'],
+
+                'Back': ['BLACK', 'RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', 'CYAN', 'WHITE', 'RESET',
+                         #These are fairly well supported, but not part of the standard:
+                         'LIGHTBLACK_EX', 'LIGHTRED_EX', 'LIGHTGREEN_EX', 'LIGHTYELLOW_EX', 'LIGHTBLUE_EX',
+                         'LIGHTMAGENTA_EX', 'LIGHTCYAN_EX', 'LIGHTWHITE_EX'],
+
+                'Style': ['DIM', 'NORMAL', 'BRIGHT', 'RESET_ALL']
+                }
 
 vars_dict:dict = dict()
 
@@ -222,13 +239,13 @@ if __name__ == "__main__":
         if not cmd_keywords_found(cmdline):
             try_evaluate(cmdline)
     else:
-        print('>> eVal.py, Ver. 0.1')
+        print(Fore.GREEN + '>> eVal.py, Ver. 0.1' + Fore.RESET)
         print(' = from math import *, from numpy import *')
         print(' = math lib help is available at: https://docs.python.org/3/library/math.html')
         print(' * Use ?v command to list all variables. Use $ variable to refer to last result')
 
         while True:
-            cmdline=input('>> ').strip()
+            cmdline=input(Fore.GREEN + '>> ' + Fore.RESET) #.strip()
             if cmd_keywords_found(cmdline):
                 pass
             elif cmdline:
