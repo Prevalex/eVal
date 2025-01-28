@@ -9,12 +9,14 @@ import numpy as np
 from fractions import Fraction
 
 from colorama import Fore, Back, Style
-from colorama import init as colorama_init
-from colorama import deinit as colorama_deinit
+#from colorama import init as colorama_init
+#from colorama import deinit as colorama_deinit
 
-#from colorama import Fore, Back, Style, just_fix_windows_console
-colorama_init()
-#just_fix_windows_console()
+from colorama import Fore, Back, Style, just_fix_windows_console
+from prompt_toolkit.key_binding.bindings.named_commands import end_of_line
+
+#colorama_init()
+just_fix_windows_console()
 
 """ #https://pypi.org/project/colorama/
 colorama_dic = {'Fore': ['BLACK', 'RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', 'CYAN', 'WHITE', 'RESET',
@@ -249,7 +251,8 @@ if __name__ == "__main__":
         print(' * Use ?v command to list all variables. Use $ variable to refer to last result')
 
         while True:
-            cmdline=input(Fore.GREEN + '>> ' + Fore.RESET) #.strip()
+            cmdline=input(Fore.GREEN + '>> ' + Fore.YELLOW).strip()
+            print(Fore.RESET, end='')
             if cmd_keywords_found(cmdline):
                 pass
             elif cmdline:
@@ -279,6 +282,6 @@ if __name__ == "__main__":
         print(f': {msg}')
         print(Fore.RESET)
 
-    colorama_deinit()
+    #colorama_deinit()
 
     sys.exit(try_result_as_int())
