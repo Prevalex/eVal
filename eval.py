@@ -204,7 +204,7 @@ def create_cmd_set(var_dict, index, prefix):
         cmd_set.append(f'@set {prefix}.{key}={value[index]}'.replace('\n', ' '))
     return '\n'.join(cmd_set) + '\n'
 
-def eVal_help():
+def eval_help():
     hlp = """
     The eVal utility can evaluate expressions using the following Python libraries: math, numpy, re, sys, os
     To access functions and values of these libraries, use the prefixes ma., .np., re., sys., os. respectively
@@ -255,7 +255,7 @@ def cmd_keywords_found(cmd_str):
     elif cmd_str == '-v':
         init_vars_dict()
     elif any([cmd_str == '?',cmd_str == '/?', cmd_str == '-h']):
-        print(eVal_help())
+        print(eval_help())
     else:
         parsed_flag = False
     return parsed_flag
