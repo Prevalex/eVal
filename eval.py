@@ -1,12 +1,11 @@
 import os
 from alx import dbg, save_text_to_file, save_pydata_to_json_file, read_pydata_from_json_file, is_file_exists
 import sys
-#import sympy
 import re
-from math import *
-from numpy import *
+import math as ma
 import numpy as np
-from fractions import Fraction
+from numpy import array
+#from fractions import Fraction
 
 from colorama import Fore, Back, Style
 #from colorama import init as colorama_init
@@ -38,9 +37,9 @@ v_val = 0 # index of variable value in variable tuple in vars_dict
 v_rep = 1 # index of variable value in variable repr  in vars_dict
 
 temp_folder = os.environ['TEMP']
-eval_file = '$eval.value'
-repr_file = '$eval.repr'
-json_file =  '$eval.vars'
+eval_file = '$eVal.value'
+repr_file = '$eVal.repr'
+json_file =  '$eVal.vars'
 
 cmd_file_eval = os.path.join(temp_folder, eval_file+'.cmd')
 cmd_file_repr = os.path.join(temp_folder, repr_file+'.cmd')
@@ -205,6 +204,42 @@ def create_cmd_set(var_dict, index, prefix):
         cmd_set.append(f'@set {prefix}.{key}={value[index]}'.replace('\n', ' '))
     return '\n'.join(cmd_set) + '\n'
 
+def eVal_help():
+    hlp = """
+    The eVal utility can evaluate expressions using the following Python libraries: math, numpy, re, sys, os
+    To access functions and values of these libraries, use the prefixes ma., .np., re., sys., os. respectively
+    For example: np.exp(ma.pi) evaluates e to the power of pi (e**pi).
+
+    Help for the libraries is available at:
+    https://docs.python.org/3/library/math.html
+    https://docs.python.org/3/library/re.html
+    https://docs.python.org/3/library/sys.html
+    https://docs.python.org/3/library/os.html
+    https://numpy.org/
+
+    Commands:
+
+    ?   - this help
+    ?v  - list of variables and their values
+    -v  - clear the list of variables
+    $   - the result of the last evaluation. You can use $ in expressions to access the result of the last evaluation.
+
+    Commands and expressions can be passed both from the command line and interactively.
+
+    On exit, the utility tries to convert the result to an integer type and return it to the errolevel.
+    Also:
+    When exiting, the utility saves the following files:
+
+    %temp%\\$eVal.vars.json - a variable list that will be loaded the next time eVal is run.
+    %temp%\\$eVal.value.cmd - a batch file containing the commands: 
+        set $eVal.value.<varname>=<value> 
+        where <varname> is variable name, <value> is variable value.
+    %temp%\\$eVal.repr.cmd - a batch file containing the command: 
+        set $eVal.value.<varname>=<repr> 
+        where where <varname> is variable name, repr is the representation of variable (see the repr() Python function)
+    """
+    return hlp
+
 def cmd_keywords_found(cmd_str):
     parsed_flag = True
     if cmd_str == '?*':
@@ -219,6 +254,8 @@ def cmd_keywords_found(cmd_str):
             print(f'   {itm} = {outs(itm)}')
     elif cmd_str == '-v':
         init_vars_dict()
+    elif any([cmd_str == '?',cmd_str == '/?', cmd_str == '-h']):
+        print(eVal_help())
     else:
         parsed_flag = False
     return parsed_flag
@@ -230,7 +267,7 @@ if __name__ == "__main__":
         if not Ok:
 
             print(Fore.RED)
-            print(f'\n! Eval.py: Error occurred while reading {var_file_json}:')
+            print(f'\n! eVal.py: Error occurred while reading {var_file_json}:')
             print(f': {vars_dict}\n')
             print(Fore.RESET)
 
@@ -246,12 +283,10 @@ if __name__ == "__main__":
             try_evaluate(cmdline)
     else:
         print(Fore.GREEN + '>> eVal.py, Ver. 0.1' + Fore.RESET)
-        print(' = from math import *, from numpy import *')
-        print(' = math lib help is available at: https://docs.python.org/3/library/math.html')
-        print(' * Use ?v command to list all variables. Use $ variable to refer to last result')
+        print(Fore.CYAN + ' = Use ? for help' + Fore.RESET)
 
         while True:
-            cmdline=input(Fore.GREEN + '>> ' + Fore.YELLOW).strip()
+            cmdline=input(Fore.GREEN + '>> ' + Fore.CYAN).strip()
             print(Fore.RESET, end='')
             if cmd_keywords_found(cmdline):
                 pass
@@ -264,21 +299,21 @@ if __name__ == "__main__":
     Ok, msg = save_text_to_file(create_cmd_set(vars_dict,v_val, eval_file ), cmd_file_eval)
     if not Ok:
         print(Fore.RED)
-        print(f'\n! Eval.py: Error occurred while saving {cmd_file_eval}:')
+        print(f'\n! eVal.py: Error occurred while saving {cmd_file_eval}:')
         print(f': {msg}')
         print(Fore.RESET)
 
     Ok, msg = save_text_to_file(create_cmd_set(vars_dict,v_rep, repr_file), cmd_file_repr)
     if not Ok:
         print(Fore.RED)
-        print(f'\n! Eval.py: Error occurred while saving {cmd_file_repr}:')
+        print(f'\n! eVal.py: Error occurred while saving {cmd_file_repr}:')
         print(f': {msg}')
         print(Fore.RESET)
 
     Ok, msg = save_pydata_to_json_file(make_repr_dict(vars_dict), var_file_json)
     if not Ok:
         print(Fore.RED)
-        print(f'\n! Eval.py: Error occurred while saving {var_file_json}:')
+        print(f'\n! eVal.py: Error occurred while saving {var_file_json}:')
         print(f': {msg}')
         print(Fore.RESET)
 
