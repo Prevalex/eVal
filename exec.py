@@ -13,7 +13,18 @@ try:
 
     loc = {'x': x, 'y': y, '__builtins__':__builtins__}
     exec(command_comp, {"__builtins__": {}}, loc)
+    print()
     print(f'loc after:{loc=}')
+    print()
+    globals()['fu'] = loc['fu']
+    globals()['z'] = loc['z']
+
+    print(f'{globals()['z']=}')
+    print(f'{locals()['z']=}')
+
+    print(fu(12))
+
+    exit()
 
 except Exception as err:
     print(f'Error: {str(err)}')

@@ -1,20 +1,13 @@
 import os
-from alx import dbg, save_text_to_file, save_pydata_to_json_file, read_pydata_from_json_file, is_file_exists
+from alx import ppdbg, dbg, save_text_to_file, save_pydata_to_json_file, read_pydata_from_json_file, is_file_exists
 import sys
 import re
 import math as ma
 import numpy as np
 from numpy import array
-#from fractions import Fraction
-
-from colorama import Fore, Back, Style
-#from colorama import init as colorama_init
-#from colorama import deinit as colorama_deinit
 
 from colorama import Fore, Back, Style, just_fix_windows_console
-from prompt_toolkit.key_binding.bindings.named_commands import end_of_line
-
-#colorama_init()
+#from prompt_toolkit.key_binding.bindings.named_commands import end_of_line
 just_fix_windows_console()
 
 """ #https://pypi.org/project/colorama/
@@ -39,7 +32,9 @@ v_rep = 1 # index of variable value in variable repr  in vars_dict
 temp_folder = os.environ['TEMP']
 eval_file = '$eVal.value'
 repr_file = '$eVal.repr'
-json_file =  '$eVal.vars'
+json_file = '$eVal.vars'
+
+key_vars = ['$']  #special internal variables (with special meaning)
 
 cmd_file_eval = os.path.join(temp_folder, eval_file+'.cmd')
 cmd_file_repr = os.path.join(temp_folder, repr_file+'.cmd')
@@ -65,6 +60,50 @@ def make_repr_dict(vars_dic):
         _repr_dict[key] = value[v_rep]
     return _repr_dict
 
+def set_variable(var_name:str, var_value:any) -> [bool, str]:
+    _Ok, _msg = True, ""
+
+    if var_name in vars_dict:
+        vars_dict[var_name]=(var_value, repr(var_value))
+    elif (var_name in globals()) or (var_name in locals()):
+        _Ok = False
+        _msg = f'{Fore.RED}Error: variable/object "{var_name}" is reserved and cannot be redefined {Fore.RESET}'
+    else:
+        vars_dict[var_name] = (var_value, repr(var_value))
+        if var_name not in key_vars:
+            globals()[var_name] = var_value
+
+    return _Ok, _msg
+
+def verify_var_name(var_name:str) -> [bool, str]:
+    _Ok, _msg = True, ''
+
+    check_list = re.findall(r'\W+', var_name)
+
+    if check_list:
+        _Ok = False
+        _msg = 'Error: Symbol(s) \"' + '\", \"'.join(check_list) + f'\" are not allowed in variable name: \"{var_name}\".'
+        return _Ok, _msg
+
+    check_list = re.findall(r'[a-zA-Z_]', var_name[0])
+
+    if not check_list:
+        _Ok = False
+        _msg = (Fore.RED + 'Error: Symbol ' + f'{var_name[0]}' + ' is not allowed as a first symbol of variable name.' +
+                Fore.RESET)
+        return _Ok, _msg
+
+    # verify if the variable is not reserved.
+    if var_name in vars_dict:
+        return _Ok, _msg
+
+    elif (var_name in globals()) or (var_name in locals()):
+        _Ok = False
+        _msg = f'{Fore.RED}Error: variable/object "{var_name}" is reserved and cannot be redefined {Fore.RESET}'
+        return _Ok, _msg
+
+    return _Ok, _msg
+
 def load_repr_dict(repr_dic):
     """
     Converts a dictionary of variables containing reprs only into a dictionary of values and reprs for subsequent
@@ -76,12 +115,12 @@ def load_repr_dict(repr_dic):
     _vars_dict = dict()
     for key, value in repr_dic.items():
         try:
-            _vars_dict[key] = (eval(value), value)
+            set_variable(key, eval(value))
         except Exception as err:
-            _vars_dict[key] = (None, repr(None))
+            set_variable(key, None)
             print(f'\n! Eval.py: Error occurred while reading {var_file_json}:')
             print(f': {err}\n')
-    _vars_dict['$'] = (None, repr(None))
+    set_variable('$',None)
     return _vars_dict
 
 def remove_white_spaces(s:str) -> str:
@@ -107,29 +146,10 @@ def substitute_variables(s:str) -> str:
 
     for index in range(len(part_list)):
         if part_list[index] in vars_dict:
-            part_list[index] = vars_dict[part_list[index]][v_rep]
+            if part_list[index] not in globals():
+                part_list[index] = vars_dict[part_list[index]][v_rep]
 
     return ''.join(part_list)
-
-def verify_var_name(varname:str) -> [bool, str]:
-    _Ok, _msg = True, ''
-
-    check_list = re.findall(r'\W+', varname)
-
-    if check_list:
-        _Ok = False
-        _msg = 'Error: Symbol(s) \"' + '\", \"'.join(check_list) + f'\" are not allowed in variable name: \"{varname}\".'
-        return _Ok, _msg
-
-    check_list = re.findall(r'[a-zA-Z_]', varname[0])
-
-    if not check_list:
-        _Ok = False
-        _msg = (Fore.RED + 'Error: Symbol ' + f'{varname[0]}' + ' is not allowed as a first symbol of variable name.' +
-                Fore.RESET)
-        return _Ok, _msg
-
-    return _Ok, _msg
 
 def outs(_var:str):
     if vars_dict[_var][v_rep] == str(vars_dict[_var][v_val]):
@@ -152,8 +172,7 @@ def evaluate_cmd(_cmd_str: str) -> str:
 
     _var_name, _cmd_str = parse_assignment(_cmd_str)
 
-    if _var_name:
-        # Got assignment
+    if _var_name:  # Got assignment
         _Ok, _msg = verify_var_name(_var_name)
 
         if not _Ok:
@@ -163,8 +182,9 @@ def evaluate_cmd(_cmd_str: str) -> str:
     _result = eval(_eval_str)
     vars_dict['$'] = (_result, repr(_result))
 
+    # assign value to variable
     if _var_name:
-        vars_dict[_var_name] = (_result, repr(_result))
+        set_variable(_var_name, _result)
         _out_str += (_var_name + ' = ')
 
     # compile _out_str for printing
@@ -262,6 +282,7 @@ def cmd_keywords_found(cmd_str):
 
 if __name__ == "__main__":
 
+    # Load saved eval variables file, if any
     if is_file_exists(var_file_json):
         Ok, repr_dict = read_pydata_from_json_file(var_file_json)
         if not Ok:
@@ -273,7 +294,7 @@ if __name__ == "__main__":
 
             init_vars_dict()
         else:
-            vars_dict = load_repr_dict(repr_dict)
+            load_repr_dict(repr_dict)
     else:
         init_vars_dict()
 
