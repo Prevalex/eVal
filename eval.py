@@ -34,6 +34,9 @@ eval_file = '$eVal.value'
 repr_file = '$eVal.repr'
 json_file = '$eVal.vars'
 
+# Variables whose names are stored in key_vars list are not included in the globals() globals,
+# and when expressions are evaluated, their names are replaced by their repr() representation
+# before evaluation.
 key_vars = ['$']  #special internal variables (with special meaning)
 
 cmd_file_eval = os.path.join(temp_folder, eval_file+'.cmd')
@@ -42,35 +45,65 @@ var_file_json = os.path.join(temp_folder, json_file+'.json')
 
 def init_vars_dict():
     """
-    Initializes a dictionary of variables
-    :return:
+    Reinitializes the variable's dictionary. If the dictionary was not empty, all variables contained in it are also
+    removed from globals().
+
+    Returns:
+        None
     """
     global vars_dict
-    vars_dict = {'$': (None, repr(None))}
 
-def make_repr_dict(vars_dic):
+    pop_list = list(vars_dict)
+    for var in pop_list:
+        vars_dict.pop(var, None)
+        globals().pop(var, None)
+
+    vars_dict['$'] = (None, repr(None))
+
+def create_repr_dict(vars_dic: dict) -> dict:
     """
-    Converts a dictionary of variables containing values and reprs into a dictionary of reprs only for subsequent
-     saving to a .json file, i.e: {var_name: (var_value, repr(var_value))} -> {var_name: repr(var_value)}
-    :param vars_dic: dictionary of variables containing their values and reprs
-    :return: dictionary of variables containing their reprs only
+    Converts a vars_dict dictionary of variables containing values and reprs into a dictionary of reprs only
+    for subsequent saving to a .json file, i.e: {var_name: (var_value, repr(var_value))} -> {var_name: repr(var_value)}
+
+    Args:
+        vars_dic: dictionary of variables containing their values and reprs
+
+    Returns:
+        dictionary of variables containing their reprs only
     """
+
     _repr_dict = dict()
     for key, value in vars_dic.items():
         _repr_dict[key] = value[v_rep]
     return _repr_dict
 
-def set_variable(var_name:str, var_value:any) -> [bool, str]:
+def set_var(var_name:str, var_value:any) -> [bool, str]:
+    """
+    Creates a variable with the given value.
+
+    Creating a variable involves inserting the variable name and value/representation into the vars_dic dictionary.
+    Also, if the variable name is not specified in the key_vars list, the variable is inserted into the globals().
+
+    Args:
+        var_name: name of the variable
+        var_value: value of the variable
+
+    Returns:
+        tuple (_Ok, _msg): If an error occurred, _Ok=False, _msg=error message. Otherwise (success) returns (True, '')
+    """
     _Ok, _msg = True, ""
 
-    if var_name in vars_dict:
-        vars_dict[var_name]=(var_value, repr(var_value))
-    elif (var_name in globals()) or (var_name in locals()):
-        _Ok = False
-        _msg = f'{Fore.RED}Error: variable/object "{var_name}" is reserved and cannot be redefined {Fore.RESET}'
-    else:
+    if var_name in key_vars:
         vars_dict[var_name] = (var_value, repr(var_value))
-        if var_name not in key_vars:
+    else:
+        if var_name in vars_dict:
+            vars_dict[var_name]=(var_value, repr(var_value))
+            globals()[var_name] = var_value
+        elif (var_name in globals()) or (var_name in locals()):
+            _Ok = False
+            _msg = f'{Fore.RED}Error: variable/object "{var_name}" is reserved and cannot be redefined {Fore.RESET}'
+        else:
+            vars_dict[var_name] = (var_value, repr(var_value))
             globals()[var_name] = var_value
 
     return _Ok, _msg
@@ -115,12 +148,12 @@ def load_repr_dict(repr_dic):
     _vars_dict = dict()
     for key, value in repr_dic.items():
         try:
-            set_variable(key, eval(value))
+            set_var(key, eval(value))
         except Exception as err:
-            set_variable(key, None)
+            set_var(key, None)
             print(f'\n! Eval.py: Error occurred while reading {var_file_json}:')
             print(f': {err}\n')
-    set_variable('$',None)
+    set_var('$', None)
     return _vars_dict
 
 def remove_white_spaces(s:str) -> str:
@@ -184,7 +217,7 @@ def evaluate_cmd(_cmd_str: str) -> str:
 
     # assign value to variable
     if _var_name:
-        set_variable(_var_name, _result)
+        set_var(_var_name, _result)
         _out_str += (_var_name + ' = ')
 
     # compile _out_str for printing
@@ -331,7 +364,7 @@ if __name__ == "__main__":
         print(f': {msg}')
         print(Fore.RESET)
 
-    Ok, msg = save_pydata_to_json_file(make_repr_dict(vars_dict), var_file_json)
+    Ok, msg = save_pydata_to_json_file(create_repr_dict(vars_dict), var_file_json)
     if not Ok:
         print(Fore.RED)
         print(f'\n! eVal.py: Error occurred while saving {var_file_json}:')
