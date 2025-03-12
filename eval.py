@@ -164,7 +164,7 @@ def remove_white_spaces(s:str) -> str:
     """
     return ''.join(re.split(r'\s',s))
 
-def substitute_variables(s:str) -> str:
+def substitute_variables(expression:str) -> str:
 
     # Regex pattern to match alphanumeric and non-alphanumeric groups
     pattern = r'\$+|\w+|[^\w^$]+'
@@ -175,7 +175,7 @@ def substitute_variables(s:str) -> str:
     # this is necessary to ensure we will substitute only complete variable name by variable value and avoid partial
     # match of name
 
-    part_list = re.findall(pattern, s)
+    part_list = re.findall(pattern, expression)
 
     for index in range(len(part_list)):
         if part_list[index] in vars_dict:
@@ -184,7 +184,7 @@ def substitute_variables(s:str) -> str:
 
     return ''.join(part_list)
 
-def outs(_var:str):
+def var_output(_var:str):
     if vars_dict[_var][v_rep] == str(vars_dict[_var][v_val]):
         return Style.BRIGHT + Fore.CYAN + vars_dict[_var][v_rep] + Style.RESET_ALL
     elif type(vars_dict[_var][v_val]).__name__ == 'str':
@@ -223,14 +223,14 @@ def evaluate_cmd(_cmd_str: str) -> str:
     # compile _out_str for printing
     if _eval_str == _cmd_str:
         if _var_name:
-            _out_str += outs(_var_name)
+            _out_str += var_output(_var_name)
         else:
-            _out_str += (_cmd_str + ' = ' + outs('$'))
+            _out_str += (_cmd_str + ' = ' + var_output('$'))
     else:
         if _cmd_str in vars_dict:
-            _out_str += (_cmd_str + ' = ' + outs(_cmd_str))
+            _out_str += (_cmd_str + ' = ' + var_output(_cmd_str))
         else:
-            _out_str += (_cmd_str + ' = ' + _eval_str + ' = ' + outs('$'))
+            _out_str += (_cmd_str + ' = ' + _eval_str + ' = ' + var_output('$'))
 
     return _out_str
 
@@ -304,7 +304,7 @@ def cmd_keywords_found(cmd_str):
         print('   }')
     elif cmd_str == '?v':
         for itm in vars_dict:
-            print(f'   {itm} = {outs(itm)}')
+            print(f'   {itm} = {var_output(itm)}')
     elif cmd_str == '-v':
         init_vars_dict()
     elif any([cmd_str == '?',cmd_str == '/?', cmd_str == '-h']):
