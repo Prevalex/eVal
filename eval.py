@@ -2,7 +2,7 @@ import os
 from alx import ppdbg, dbg, save_text_to_file, save_pydata_to_json_file, read_pydata_from_json_file, is_file_exists
 import sys
 import re
-import math as ma
+import math as m
 import numpy as np
 from numpy import array
 
@@ -26,22 +26,23 @@ colorama_dic = {'Fore': ['BLACK', 'RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', '
 """
 vars_dict:dict = dict()
 
-v_val = 0 # index of variable value in variable tuple in vars_dict
-v_rep = 1 # index of variable value in variable repr  in vars_dict
+var_val_index = 0 # index of variable value in variable tuple in vars_dict
+var_rep_index = 1 # index of variable value in variable repr  in vars_dict
 
-temp_folder = os.environ['TEMP']
-eval_file = '$eVal.value'
-repr_file = '$eVal.repr'
-json_file = '$eVal.vars'
+# Variables whose names begin with an underscore are considered literals. If they appear in an expression string,
+# the literal name will be replaced by its representation, created by repr() before the expression is evaluated.
+# Literal names are stored in the literal_names list. One literal, called $, has a special meaning: its name does
+# not begin with _, it is always quoted, and its value is always the result of the last evaluation.
+literal_names = ['$']  #special internal variables (with special meaning)
 
-# Variables whose names are stored in key_vars list are not included in the globals() globals,
-# and when expressions are evaluated, their names are replaced by their repr() representation
-# before evaluation.
-key_vars = ['$']  #special internal variables (with special meaning)
+os_temp_folder = os.environ['TEMP']
+eval_cmdfile_name = '$eVal.value'
+repr_cmdfile_name = '$eVal.repr'
+repr_jsonfile_name = '$eVal.vars'
 
-cmd_file_eval = os.path.join(temp_folder, eval_file+'.cmd')
-cmd_file_repr = os.path.join(temp_folder, repr_file+'.cmd')
-var_file_json = os.path.join(temp_folder, json_file+'.json')
+cmd_file_eval = os.path.join(os_temp_folder, eval_cmdfile_name + '.cmd')
+cmd_file_repr = os.path.join(os_temp_folder, repr_cmdfile_name + '.cmd')
+repr_file_json = os.path.join(os_temp_folder, repr_jsonfile_name + '.json')
 
 def init_vars_dict():
     """
@@ -56,7 +57,8 @@ def init_vars_dict():
     pop_list = list(vars_dict)
     for var in pop_list:
         vars_dict.pop(var, None)
-        globals().pop(var, None)
+        if var not in literal_names:
+            globals().pop(var, None)
 
     vars_dict['$'] = (None, repr(None))
 
@@ -74,7 +76,7 @@ def create_repr_dict(vars_dic: dict) -> dict:
 
     _repr_dict = dict()
     for key, value in vars_dic.items():
-        _repr_dict[key] = value[v_rep]
+        _repr_dict[key] = value[var_rep_index]
     return _repr_dict
 
 def set_var(var_name:str, var_value:any) -> [bool, str]:
@@ -93,7 +95,10 @@ def set_var(var_name:str, var_value:any) -> [bool, str]:
     """
     _Ok, _msg = True, ""
 
-    if var_name in key_vars:
+    if var_name[:1] == '_' and var_name not in literal_names:
+        literal_names.append(var_name)
+
+    if var_name in literal_names:
         vars_dict[var_name] = (var_value, repr(var_value))
     else:
         if var_name in vars_dict:
@@ -151,7 +156,7 @@ def load_repr_dict(repr_dic):
             set_var(key, eval(value))
         except Exception as err:
             set_var(key, None)
-            print(f'\n! Eval.py: Error occurred while reading {var_file_json}:')
+            print(f'\n! Eval.py: Error occurred while reading {repr_file_json}:')
             print(f': {err}\n')
     set_var('$', None)
     return _vars_dict
@@ -164,7 +169,7 @@ def remove_white_spaces(s:str) -> str:
     """
     return ''.join(re.split(r'\s',s))
 
-def substitute_variables(expression:str) -> str:
+def subst_literals(expression:str) -> str:
 
     # Regex pattern to match alphanumeric and non-alphanumeric groups
     pattern = r'\$+|\w+|[^\w^$]+'
@@ -180,30 +185,30 @@ def substitute_variables(expression:str) -> str:
     for index in range(len(part_list)):
         if part_list[index] in vars_dict:
             if part_list[index] not in globals():
-                part_list[index] = vars_dict[part_list[index]][v_rep]
+                part_list[index] = vars_dict[part_list[index]][var_rep_index]
 
     return ''.join(part_list)
 
 def var_output(_var:str):
-    if vars_dict[_var][v_rep] == str(vars_dict[_var][v_val]):
-        return Style.BRIGHT + Fore.CYAN + vars_dict[_var][v_rep] + Style.RESET_ALL
-    elif type(vars_dict[_var][v_val]).__name__ == 'str':
-        return Style.BRIGHT + Fore.CYAN + vars_dict[_var][v_rep] + Style.RESET_ALL
+    if vars_dict[_var][var_rep_index] == str(vars_dict[_var][var_val_index]):
+        return Style.BRIGHT + Fore.CYAN + vars_dict[_var][var_rep_index] + Style.RESET_ALL
+    elif type(vars_dict[_var][var_val_index]).__name__ == 'str':
+        return Style.BRIGHT + Fore.CYAN + vars_dict[_var][var_rep_index] + Style.RESET_ALL
     else:
-        return (type(vars_dict[_var][v_val]).__name__ + '(\n' + Style.BRIGHT + Fore.CYAN + str(vars_dict[_var][v_val]) +
+        return (type(vars_dict[_var][var_val_index]).__name__ + '(\n' + Style.BRIGHT + Fore.CYAN + str(vars_dict[_var][var_val_index]) +
                 Style.RESET_ALL + '\n)')
 
-def parse_assignment(s:str):
-    pos=s.find('=')
+def parse_assignment(expression:str):
+    pos=expression.find('=')
     if pos >= 0:
-        return s[:pos], s[pos+1:]
+        return expression[:pos], expression[pos + 1:]
     else:
-        return '', s
+        return '', expression
         
-def evaluate_cmd(_cmd_str: str) -> str:
+def evaluate_exp(_exp_str: str) -> str:
     _out_str = ''
 
-    _var_name, _cmd_str = parse_assignment(_cmd_str)
+    _var_name, _exp_str = parse_assignment(_exp_str)
 
     if _var_name:  # Got assignment
         _Ok, _msg = verify_var_name(_var_name)
@@ -211,9 +216,15 @@ def evaluate_cmd(_cmd_str: str) -> str:
         if not _Ok:
             raise ValueError(_msg)
 
-    _eval_str = substitute_variables(_cmd_str)
-    _result = eval(_eval_str)
+    _eval_str = subst_literals(_exp_str)
+
+    _locals = dict() # to take variables from eval() when they were created with walrus := assignment
+
+    _result = eval(_eval_str, locals=_locals)
     vars_dict['$'] = (_result, repr(_result))
+
+    for _evar, _eval in  _locals.items(): # transfer to globals() the variable created during execution of eval
+        set_var(_evar, _eval)
 
     # assign value to variable
     if _var_name:
@@ -221,31 +232,34 @@ def evaluate_cmd(_cmd_str: str) -> str:
         _out_str += (_var_name + ' = ')
 
     # compile _out_str for printing
-    if _eval_str == _cmd_str:
+    if _eval_str == _exp_str:
         if _var_name:
             _out_str += var_output(_var_name)
         else:
-            _out_str += (_cmd_str + ' = ' + var_output('$'))
+            _out_str += (_exp_str + ' = ' + var_output('$'))
     else:
-        if _cmd_str in vars_dict:
-            _out_str += (_cmd_str + ' = ' + var_output(_cmd_str))
+        if _exp_str in vars_dict:
+            if _exp_str in literal_names:
+                _out_str += (Fore.YELLOW + _exp_str + Fore.RESET + ' = ' + var_output(_exp_str))
+            else:
+                _out_str += (_exp_str + ' = ' + var_output(_exp_str))
         else:
-            _out_str += (_cmd_str + ' = ' + _eval_str + ' = ' + var_output('$'))
+            _out_str += (_exp_str + ' = ' + _eval_str + ' = ' + var_output('$'))
 
     return _out_str
 
 def try_result_as_int() -> int:
     try:  # Try direct convert to int
-        _rc = int(vars_dict['$'][v_val])
+        _rc = int(vars_dict['$'][var_val_index])
     except (ValueError, TypeError, ZeroDivisionError):
         _rc = -1
     return _rc
 
-def try_evaluate(cmd):
+def try_evaluate(expression):
 
-    cmd = remove_white_spaces(cmd)
+    expression = remove_white_spaces(expression)
     try:
-        out_str = evaluate_cmd(cmd)
+        out_str = evaluate_exp(expression)
     except Exception as err:
         out_str = Fore.RED + str(err) + Fore.RESET
 
@@ -258,9 +272,13 @@ def create_cmd_set(var_dict, index, prefix):
     return '\n'.join(cmd_set) + '\n'
 
 def eval_help():
-    hlp = """
-    The eVal utility can evaluate expressions using the following Python libraries: math, numpy, re, sys, os
-    To access functions and values of these libraries, use the prefixes ma., .np., re., sys., os. respectively
+    hlp = f"""
+    {Fore.CYAN}
+    The eVal utility can evaluate expressions using the following Python libraries: 
+    
+    {Fore.GREEN}math, numpy, re, sys, os{Fore.CYAN}
+    
+    To access functions and values of these libraries, use the prefixes m., .np., re., sys., os. respectively
     For example: np.exp(ma.pi) evaluates e to the power of pi (e**pi).
 
     Help for the libraries is available at:
@@ -269,9 +287,18 @@ def eval_help():
     https://docs.python.org/3/library/sys.html
     https://docs.python.org/3/library/os.html
     https://numpy.org/
+    
+    
+    {Fore.GREEN}Variables:
+    ---------{Fore.CYAN}
+    
+    Variables whose names begin with an underscore are considered literals. If they appear in an expression string, 
+    the literal name will be replaced by its representation, created by repr() before the expression is evaluated. 
+    Literal names are stored in the literal_names list. One literal, called $, has a special meaning: its name does 
+    not begin with _, it is always quoted, and its value is always the result of the last evaluation.
 
-    Commands:
-
+    {Fore.GREEN}Commands:
+    --------{Fore.CYAN}
     ?   - this help
     ?v  - list of variables and their values
     -v  - clear the list of variables
@@ -279,9 +306,13 @@ def eval_help():
 
     Commands and expressions can be passed both from the command line and interactively.
 
+    {Fore.GREEN}Returns:
+    -------{Fore.CYAN}
     On exit, the utility tries to convert the result to an integer type and return it to the errolevel.
-    Also:
-    When exiting, the utility saves the following files:
+    
+    {Fore.GREEN}Also:
+    ----{Fore.CYAN}
+    On exit, the utility saves the following files:
 
     %temp%\\$eVal.vars.json - a variable list that will be loaded the next time eVal is run.
     %temp%\\$eVal.value.cmd - a batch file containing the commands: 
@@ -290,24 +321,27 @@ def eval_help():
     %temp%\\$eVal.repr.cmd - a batch file containing the command: 
         set $eVal.value.<varname>=<repr> 
         where where <varname> is variable name, repr is the representation of variable (see the repr() Python function)
-    """
+    {Fore.RESET}"""
     return hlp
 
-def cmd_keywords_found(cmd_str):
+def cmd_keywords_found(exp_str):
     parsed_flag = True
-    if cmd_str == '?*':
+    if exp_str == '?*':
         print('\n  {')
         vars_dict_list = []
         for itm in vars_dict:
             vars_dict_list.append(f'   {itm}: {vars_dict[itm]}')
         print(',\n'.join(vars_dict_list))
         print('   }')
-    elif cmd_str == '?v':
+    elif exp_str == '?v':
         for itm in vars_dict:
-            print(f'   {itm} = {var_output(itm)}')
-    elif cmd_str == '-v':
+            if itm in literal_names:
+                print(f'   {Fore.YELLOW+itm+Fore.RESET} = {var_output(itm)}')
+            else:
+                print(f'   {itm} = {var_output(itm)}')
+    elif exp_str == '-v':
         init_vars_dict()
-    elif any([cmd_str == '?',cmd_str == '/?', cmd_str == '-h']):
+    elif any([exp_str == '?', exp_str == '/?', exp_str == '-h']):
         print(eval_help())
     else:
         parsed_flag = False
@@ -316,12 +350,12 @@ def cmd_keywords_found(cmd_str):
 if __name__ == "__main__":
 
     # Load saved eval variables file, if any
-    if is_file_exists(var_file_json):
-        Ok, repr_dict = read_pydata_from_json_file(var_file_json)
+    if is_file_exists(repr_file_json):
+        Ok, repr_dict = read_pydata_from_json_file(repr_file_json)
         if not Ok:
 
             print(Fore.RED)
-            print(f'\n! eVal.py: Error occurred while reading {var_file_json}:')
+            print(f'\n! eVal.py: Error occurred while reading {repr_file_json}:')
             print(f': {vars_dict}\n')
             print(Fore.RESET)
 
@@ -336,7 +370,7 @@ if __name__ == "__main__":
         if not cmd_keywords_found(cmdline):
             try_evaluate(cmdline)
     else:
-        print(Fore.GREEN + '>> eVal.py, Ver. 0.1' + Fore.RESET)
+        print(Fore.GREEN + '>> eVal.py: Yet Another Evaluator, Ver. 0.1' + Fore.RESET)
         print(Fore.CYAN + ' = Use ? for help' + Fore.RESET)
 
         while True:
@@ -350,24 +384,24 @@ if __name__ == "__main__":
                 #print(f'-> Quit')
                 break
 
-    Ok, msg = save_text_to_file(create_cmd_set(vars_dict,v_val, eval_file ), cmd_file_eval)
+    Ok, msg = save_text_to_file(create_cmd_set(vars_dict, var_val_index, eval_cmdfile_name), cmd_file_eval)
     if not Ok:
         print(Fore.RED)
         print(f'\n! eVal.py: Error occurred while saving {cmd_file_eval}:')
         print(f': {msg}')
         print(Fore.RESET)
 
-    Ok, msg = save_text_to_file(create_cmd_set(vars_dict,v_rep, repr_file), cmd_file_repr)
+    Ok, msg = save_text_to_file(create_cmd_set(vars_dict, var_rep_index, repr_cmdfile_name), cmd_file_repr)
     if not Ok:
         print(Fore.RED)
         print(f'\n! eVal.py: Error occurred while saving {cmd_file_repr}:')
         print(f': {msg}')
         print(Fore.RESET)
 
-    Ok, msg = save_pydata_to_json_file(create_repr_dict(vars_dict), var_file_json)
+    Ok, msg = save_pydata_to_json_file(create_repr_dict(vars_dict), repr_file_json)
     if not Ok:
         print(Fore.RED)
-        print(f'\n! eVal.py: Error occurred while saving {var_file_json}:')
+        print(f'\n! eVal.py: Error occurred while saving {repr_file_json}:')
         print(f': {msg}')
         print(Fore.RESET)
 
