@@ -167,7 +167,8 @@ def remove_white_spaces(s:str) -> str:
     :param s: input string, which may contain white characters
     :return: output string, where all white characters are removed
     """
-    return ''.join(re.split(r'\s',s))
+    #return ''.join(re.split(r'\s', s))
+    return ' '.join(re.split(r'\s',s))  # 21.03.2025
 
 def subst_literals(expression:str) -> str:
 
