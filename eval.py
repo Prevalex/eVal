@@ -1,14 +1,21 @@
 import os
-from alx import ppdbg, dbg, save_text_to_file, save_pydata_to_json_file, read_pydata_from_json_file, is_file_exists
 import sys
 import re
-import math as m
-import numpy as np
-from numpy import array
 
+from alx import ppdbg, dbg, save_text_to_file, save_pydata_to_json_file, read_pydata_from_json_file, is_file_exists
 from colorama import Fore, Back, Style, just_fix_windows_console
 #from prompt_toolkit.key_binding.bindings.named_commands import end_of_line
 just_fix_windows_console()
+
+if '.eVal' in os.environ:
+    eval_import = os.environ['.eVal']
+    if 'math' in eval_import:
+        print(Fore.CYAN + '>> import math as m' + Fore.RESET)
+        import math as m
+    if 'numpy' in eval_import:
+        print(Fore.CYAN + '>> import numpy as np')
+        import numpy as np
+        from numpy import array
 
 """ #https://pypi.org/project/colorama/
 colorama_dic = {'Fore': ['BLACK', 'RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', 'CYAN', 'WHITE', 'RESET',
@@ -202,7 +209,7 @@ def var_output(_var:str):
 def parse_assignment(expression:str):
     pos=expression.find('=')
     if pos >= 0:
-        return expression[:pos], expression[pos + 1:]
+        return expression[:pos].strip(), expression[pos + 1:].strip()
     else:
         return '', expression
         
