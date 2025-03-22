@@ -9,10 +9,10 @@ just_fix_windows_console()
 
 if '.eVal' in os.environ:
     eval_import = os.environ['.eVal']
-    if 'math' in eval_import:
+    if 'math' in eval_import or '*' in eval_import:
         print(Fore.CYAN + '>> import math as m' + Fore.RESET)
         import math as m
-    if 'numpy' in eval_import:
+    if 'numpy' in eval_import or '*' in eval_import:
         print(Fore.CYAN + '>> import numpy as np')
         import numpy as np
         from numpy import array
