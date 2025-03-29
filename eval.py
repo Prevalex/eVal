@@ -225,13 +225,12 @@ def evaluate_exp(_exp_str: str) -> str:
             raise ValueError(_msg)
 
     _eval_str = subst_literals(_exp_str)
+    _locals_dic = dict() # to take variables from eval() when they were created with walrus := assignment
+    _result = eval(_eval_str, None, _locals_dic)
 
-    _locals = dict() # to take variables from eval() when they were created with walrus := assignment
-
-    _result = eval(_eval_str, locals=_locals)
     vars_dict['$'] = (_result, repr(_result))
 
-    for _evar, _eval in  _locals.items(): # transfer to globals() the variable created during execution of eval
+    for _evar, _eval in  _locals_dic.items(): # transfer to globals() the variable created during execution of eval
         set_var(_evar, _eval)
 
     # assign value to variable
