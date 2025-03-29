@@ -16,6 +16,10 @@ if '.eVal' in os.environ:
         print(Fore.CYAN + '>> import numpy as np')
         import numpy as np
         from numpy import array
+else:
+    import math as m
+    import numpy as np
+    from numpy import array
 
 """ #https://pypi.org/project/colorama/
 colorama_dic = {'Fore': ['BLACK', 'RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', 'CYAN', 'WHITE', 'RESET',
