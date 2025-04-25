@@ -7,19 +7,20 @@ from colorama import Fore, Back, Style, just_fix_windows_console
 #from prompt_toolkit.key_binding.bindings.named_commands import end_of_line
 just_fix_windows_console()
 
+eval_imp = []
 if '.eVal' in os.environ:
-    eval_import = os.environ['.eVal']
+    eval_import = os.environ['.eVal'].lower()
     if 'math' in eval_import or '*' in eval_import:
-        print(Fore.CYAN + '>> import math as m' + Fore.RESET)
+        eval_imp.append(Fore.CYAN + '>> import math as m' + Fore.RESET)
         import math as m
     if 'numpy' in eval_import or '*' in eval_import:
-        print(Fore.CYAN + '>> import numpy as np')
+        eval_imp.append(Fore.CYAN + '>> import numpy as np')
         import numpy as np
         from numpy import array
-else:
-    import math as m
-    import numpy as np
-    from numpy import array
+    if 'pandas' in eval_import or '*' in eval_import:
+        eval_imp.append(Fore.CYAN + '>> import pandas as pd')
+        import pandas as pd
+        from numpy import array
 
 """ #https://pypi.org/project/colorama/
 colorama_dic = {'Fore': ['BLACK', 'RED', 'GREEN', 'YELLOW', 'BLUE', 'MAGENTA', 'CYAN', 'WHITE', 'RESET',
@@ -46,7 +47,11 @@ var_rep_index = 1 # index of variable value in variable repr  in vars_dict
 # not begin with _, it is always quoted, and its value is always the result of the last evaluation.
 literal_names = ['$']  #special internal variables (with special meaning)
 
-os_temp_folder = os.environ['TEMP']
+if 'TEMP' in os.environ:
+    os_temp_folder = os.environ['TEMP']
+else:
+    os_temp_folder = os.path.abspath('.')
+
 eval_cmdfile_name = '$eVal.value'
 repr_cmdfile_name = '$eVal.repr'
 repr_jsonfile_name = '$eVal.vars'
@@ -266,7 +271,10 @@ def try_result_as_int() -> int:
         _rc = -1
     return _rc
 
-def try_evaluate(expression):
+def try_evaluate_file(filename):
+    pass
+
+def try_evaluate_line(expression):
 
     expression = remove_white_spaces(expression)
     try:
@@ -376,13 +384,21 @@ if __name__ == "__main__":
     else:
         init_vars_dict()
 
+    cmdline = cmdfile = ''
     if len(sys.argv) > 1:
-        cmdline = ' '.join(sys.argv[1:])
-        if not cmd_keywords_found(cmdline):
-            try_evaluate(cmdline)
+        map(str.strip, sys.argv)
+        if sys.argv[1] == '@':
+            cmdfile = ' '.join(sys.argv[2:])
+            try_evaluate_file(cmdfile)
+        else:
+            cmdline = ' '.join(sys.argv[1:])
+            if not cmd_keywords_found(cmdline):
+                try_evaluate_line(cmdline)
     else:
         print(Fore.GREEN + '>> eVal.py: Yet Another Evaluator, Ver. 0.1' + Fore.RESET)
-        print(Fore.CYAN + ' = Use ? for help' + Fore.RESET)
+        for _imp in eval_imp:
+            print(_imp)
+        print(Style.BRIGHT + Fore.CYAN + ' = Use ? for help' + Fore.RESET)
 
         while True:
             cmdline=input(Fore.GREEN + '>> ' + Fore.CYAN).strip()
@@ -390,7 +406,7 @@ if __name__ == "__main__":
             if cmd_keywords_found(cmdline):
                 pass
             elif cmdline:
-                try_evaluate(cmdline)
+                try_evaluate_line(cmdline)
             else:
                 #print(f'-> Quit')
                 break
