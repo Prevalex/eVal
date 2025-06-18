@@ -297,7 +297,11 @@ def eval_help():
     
     {Fore.GREEN}math, numpy, re, sys, os{Fore.CYAN}
     
-    To access functions and values of these libraries, use the prefixes m., .np., re., sys., os. respectively
+    In order for these libraries to be imported, they must be specified in the .eVal environment variable,
+    for example: {Fore.BLUE}.eVal = math, re{Fore.CYAN}
+    If {Fore.BLUE}.eVal = *{Fore.CYAN} all libraries will be imported.  
+    
+    To access functions and values of these libraries, use the prefixes {Fore.BLUE}m., .np., re., sys., os.{Fore.CYAN} respectively
     For example: np.exp(ma.pi) evaluates e to the power of pi (e**pi).
 
     Help for the libraries is available at:
