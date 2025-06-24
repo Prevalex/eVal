@@ -324,6 +324,7 @@ def eval_help():
     --------{Fore.CYAN}
     ?   - this help
     ?v  - list of variables and their values
+    ?*  - variables dictionary, where each variable v is represented by its value and repr(v)
     -v  - clear the list of variables
     $   - the result of the last evaluation. You can use $ in expressions to access the result of the last evaluation.
 
